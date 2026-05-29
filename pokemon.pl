@@ -1,4 +1,7 @@
-% Lista de Pokemones
+%Nombres: Matías Salgado, Angel Vargas, Denisse Maldonado
+
+
+% Lista de Pokemones (son los de 4ta generación :p)
 
 pokemon(turtwig, planta, nil).
 pokemon(grotle, planta, nil).
@@ -241,39 +244,38 @@ ineficaz(veneno, acero).
 
 % Oponentes
 
-oponente(candela, [garchomp, bidoof, monferno]).
-oponente(blanche, [spiritomb, drapion, staraptor]).
-oponente(spark, [combee, lucario, mamoswine]).
-oponente(gary, [giratina, dialga, palkia]).
+oponente(candela, [magnezone, shinx, monferno]). %Consulta que lo vence: combate([garchomp, lucario, empoleon], candela).
+oponente(blanche, [luxio, bidoof, staraptor]). %Consulta que lo vence: combate([rhyperior, infernape, luxray], blanche).
+oponente(spark, [combee, lucario, mamoswine]). %Consulta que lo vence: combate([infernape, magmortar, heatran], spark).
+oponente(gary, [monferno, chimchar, magmortar]). %consulta que lo vence: combate([empoleon, piplup, prinplup], gary).
 
-% Predicados para la regla de vencer
+% Reglas
 
-% Obtiene los tipos de un pokémon (filtra nil)
-tipos(Pokemon, [Tipo1, Tipo2]) :- 
-    pokemon(Pokemon, Tipo1, Tipo2),
-    Tipo2 \= nil.
+tipo(Pokemon, Tipo) :-
+    pokemon(Pokemon, Tipo, _).
 
-tipos(Pokemon, [Tipo1]) :- 
-    pokemon(Pokemon, Tipo1, nil).
+tipo(Pokemon, Tipo) :-
+    pokemon(Pokemon, _, Tipo),
+    Tipo \= nil.
 
-% Verifica si al menos un tipo de A es efectivo contra alguno de B
-al_menos_uno_efectivo(A, B) :-
-    tipos(A, TiposA),
-    tipos(B, TiposB),
-    member(TipoA, TiposA),
-    member(TipoB, TiposB),
-    efectivo(TipoA, TipoB).
-
-% Verifica que ningún tipo de A sea ineficaz contra ninguno de B
-ninguno_ineficaz(A, B) :-
-    tipos(A, TiposA),
-    tipos(B, TiposB),
-    \+ (member(TipoA, TiposA), member(TipoB, TiposB), ineficaz(TipoA, TipoB)).
-
-% A vence a B si cumple ambas condiciones:
-% 1. Al menos uno de sus tipos es efectivo contra uno de los tipos de B
-% 2. Ninguno de sus tipos es ineficaz contra alguno de los tipos de B
 vence(A, B) :-
-    al_menos_uno_efectivo(A, B),
-    ninguno_ineficaz(A, B).
+    % Existe al menos un tipo de A efectivo contra algún tipo de B
+    tipo(A, TipoA),
+    tipo(B, TipoB),
+    efectivo(TipoA, TipoB),
+    % Ningún tipo de A es ineficaz contra ningún tipo de B
+    \+ (tipo(A, TX), tipo(B, TY), ineficaz(TX, TY)).
+
+combate(MiEquipo, Oponente) :-
+    oponente(Oponente, EquipoRival),
+    todos_vencidos(MiEquipo, EquipoRival).
+
+% Victoria en caso de que no le queden pokemones al oponente
+todos_vencidos(_, []).
+
+% El primer rival debe ser vencido por alguien de mi equipo, luego verificar el resto
+todos_vencidos(MiEquipo, [RivalActual | Resto]) :-
+    member(MiPokemon, MiEquipo),
+    vence(MiPokemon, RivalActual),
+    todos_vencidos(MiEquipo, Resto).
 
